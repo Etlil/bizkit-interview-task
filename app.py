@@ -62,6 +62,7 @@ def parse_date(value):
 
 def rental_days(from_date, to_date):
     """Number of days a rental covers."""
+    # I added +1 to the calculation to make the rental days inclusive of both the start and end dates.
     return (to_date - from_date).days + 1
 
 
