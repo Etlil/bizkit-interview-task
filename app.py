@@ -101,7 +101,9 @@ def index():
 
 @app.route("/api/equipment")
 def list_equipment():
-    return jsonify(EQUIPMENT)
+    # Equipment that is not under maintenance can be booked.
+    bookable = [item for item in EQUIPMENT if item["status"] != "maintenance"]
+    return jsonify(bookable)
 
 
 @app.route("/api/bookings")
@@ -117,6 +119,9 @@ def availability():
 
     available = []
     for item in EQUIPMENT:
+        # Skips the equipment if it is under maintenance, since it cannot be booked.
+        if item["status"] == "maintenance":
+            continue
         conflict = find_conflicting_booking(item["id"], from_date, to_date, bookings)
         if conflict is None:
             available.append(item)
@@ -130,6 +135,10 @@ def create_booking():
     equipment = get_equipment(data.get("equipment_id"))
     if equipment is None:
         return jsonify({"error": "Unknown equipment"}), 400
+    
+    # Equipment under maintenance can't be booked, even via a direct API call.
+    if equipment["status"] == "maintenance":
+        return jsonify({"error": f"{equipment['name']} is under maintenance and cannot be booked"}), 400
 
     from_date = parse_date(data["from_date"])
     to_date = parse_date(data["to_date"])
